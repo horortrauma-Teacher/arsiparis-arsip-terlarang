@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arsiparis Arsip Terlarang</title>
+    <style>
+        :root {
+            --bg-color: #1A1612;
+            --panel-color: #2C241D;
+            --accent-color: #D4A373;
+            --text-color: #FAEDCD;
+            --danger-color: #BC4749;
+            --success-color: #606C38;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            max-height: 750px;
+            background-color: var(--panel-color);
+            border: 4px solid var(--accent-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .header {
+            background: #15110E;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .task-box {
+            background: #1F1A15;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--accent-color);
+            margin-bottom: 15px;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .option-btn {
+            background: #3A3027;
+            color: var(--text-color);
+            border: 1px solid var(--accent-color);
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            text-align: left;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .option-btn:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 10px 15px;
+            background: #15110E;
+            border-top: 1px solid #3A3027;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>ARSIPARIS: ARSIP TERLARANG</h1>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="content" id="app">
+            <!-- Screen 1: Main Menu -->
+            <div id="screen-menu">
+                <p style="font-size: 0.9rem; line-height: 1.5;">
+                    Selamat datang di Ruang Bawah Tanah.<br>
+                    Pulihkan dokumen sejarah sebelum fajar tiba, dan waspadai sang <b>Revisionis</b> di antara kita!
+                </p>
+                <button class="btn" onclick="startGame()">MULAI EKSPEDISI</button>
+            </div>
+
+            <!-- Screen 2: Task Gameplay -->
+            <div id="screen-game" class="hidden" style="width: 100%;">
+                <div class="task-box">
+                    <p id="task-question" style="font-size: 0.9rem; margin-top:0;"></p>
+                </div>
+                <div id="task-options" style="width: 100%;"></div>
+            </div>
+
+            <!-- Screen 3: Result Screen -->
+            <div id="screen-result" class="hidden">
+                <h2 id="result-title">SELESAI</h2>
+                <p id="result-desc"></p>
+                <button class="btn" onclick="returnToMenu()">KEMBALI KE MENU</button>
+            </div>
+        </div>
+
+        <!-- STATUS BAR -->
+        <div class="status-bar" id="status-bar">
+            <span>Status: Siap</span>
+            <span>Progress: <span id="progress-count">0</span>/3</span>
+        </div>
+    </div>
+
+    <script>
+        // Bank Soal Teka-Teki Dokumen
+        const archiveTaskBank = [
+            {
+                document: "Tahun 1945: Proklamasi Kemerdekaan diproklamirkan di [ ? ] oleh Soekarno & Hatta.",
+                options: ["Rengasdengklok", "Pegangsaan Timur", "Gedung Merdeka", "Monas"],
+                answer: "Pegangsaan Timur"
+            },
+            {
+                document: "Naskah perjanjian kuno Kerajaan Tarumanegara ditulis di atas batu prasasti menggunakan huruf [ ? ].",
+                options: ["Pallawa", "Jawa Kuno", "Latin", "Arab Melayu"],
+                answer: "Pallawa"
+            },
+            {
+                document: "Ekspedisi penjelajahan samudra pertama yang memasuki arsip Nusantara dipimpin oleh bangsa [ ? ].",
+                options: ["Portugis", "Belanda", "Inggris", "Spanyol"],
+                answer: "Portugis"
+            }
+        ];
+
+        let currentTaskIndex = 0;
+        let tasksCompleted = 0;
+
+        function startGame() {
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            currentTaskIndex = 0;
+            tasksCompleted = 0;
+            loadNextTask();
+        }
+
+        function loadNextTask() {
+            if (currentTaskIndex >= archiveTaskBank.length) {
+                endGame(true);
+                return;
+            }
+
+            const task = archiveTaskBank[currentTaskIndex];
+            document.getElementById('task-question').innerText = task.document;
+            
+            const optionsContainer = document.getElementById('task-options');
+            optionsContainer.innerHTML = '';
+
+            task.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, task.answer);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('progress-count').innerText = tasksCompleted;
+        }
+
+        function checkAnswer(selected, correct) {
+            if (selected === correct) {
+                tasksCompleted++;
+                currentTaskIndex++;
+                loadNextTask();
+            } else {
+                alert("Pilihan salah! Dokumen gagal dipulihkan.");
+                currentTaskIndex++;
+                loadNextTask();
+            }
+        }
+
+        function endGame(won) {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+            
+            const title = document.getElementById('result-title');
+            const desc = document.getElementById('result-desc');
+
+            if (won) {
+                title.innerText = "EKSPEDISI BERHASIL!";
+                desc.innerText = "Semua arsip sejarah berhasil dipulihkan dengan akurat. Kerja bagus, Arsiparis!";
+            } else {
+                title.innerText = "EKSPEDISI GAGAL";
+                desc.innerText = "Revisionis berhasil menyusupkan kepalsuan ke dalam arsip.";
+            }
+            document.getElementById('progress-count').innerText = tasksCompleted;
+        }
+
+        function returnToMenu() {
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-menu').classList.remove('hidden');
+        }
+    </script>
+</body>
